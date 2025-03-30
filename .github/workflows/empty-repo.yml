@@ -1,25 +1,44 @@
-name: Empty Repository at UTC+8 0:00
-
+name: Clear repository at 0:00 UTC+8
+ 
 on:
   schedule:
-    - cron: '0 16 * * *'  # UTC 时间 16:00 对应 UTC+8 时间 0:00
-  workflow_dispatch: 
-    
+    # 定时器表达式，UTC+8的0:00对应UTC的16:00
+    # 注意：GitHub Actions的时区默认是UTC，所以需要调整为UTC+8的时间
+    - cron: '0 16 * * *'
+  workflow_dispatch: # 允许手动触发
+ 
 jobs:
-  empty-repo:
+  clear-repo:
     runs-on: ubuntu-latest
+ 
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          ref: main  # 替换为你的默认分支名
-
-      - name: Remove all files except .github
-        run: |
-          find . -mindepth 1 -maxdepth 1 ! -name ".github" -exec rm -rf {} +
-          git add .
-          git commit -m "Empty repository except .github"
-
-      - name: Push changes
-        run: |
-          git push origin main  # 替换为你的默认分支名    
+    - name: Checkout code
+      uses: actions/checkout@v2
+      with:
+        persist-credentials: false # 避免权限问题
+        fetch-depth: 0 # 获取所有分支和标签
+ 
+    - name: Configure Git user
+      run: |
+        git config --global user.email "your-email@example.com"
+        git config --global user.name "actions-user"
+    - name: Remove all files except .github
+      run: |
+        # 切换到仓库根目录
+        cd $GITHUB_WORKSPACE
+        # 列出所有文件和目录，排除.github文件夹下的内容
+        FILES=$(find . -mindepth 1 -maxdepth 1 -not -path "./.github/*" -type f -print)
+        # 如果存在文件，则删除这些文件
+        if [ -n "$FILES" ]; then
+          echo "Deleting files:"
+          echo "$FILES"
+          rm -f $FILES
+          # 提交更改（如果有）
+          if [ "$(git status --porcelain)" ]; then
+            git add .
+            git commit -m "Auto-delete files at $(date)" || true # 如果目录为空，commit会失败，用|| true忽略错误
+            git push origin main --force # 强制推送到主分支，确保更改生效
+          fi
+        else
+          echo "No files to delete."
+        fi
