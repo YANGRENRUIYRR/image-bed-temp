@@ -1,0 +1,25 @@
+name: Empty Repository at UTC+8 0:00
+
+on:
+  schedule:
+    - cron: '0 16 * * *'  # UTC 时间 16:00 对应 UTC+8 时间 0:00
+  workflow_dispatch: 
+    
+jobs:
+  empty-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+        with:
+          ref: main  # 替换为你的默认分支名
+
+      - name: Remove all files except .github
+        run: |
+          find . -mindepth 1 -maxdepth 1 ! -name ".github" -exec rm -rf {} +
+          git add .
+          git commit -m "Empty repository except .github"
+
+      - name: Push changes
+        run: |
+          git push origin main  # 替换为你的默认分支名    
