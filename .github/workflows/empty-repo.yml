@@ -1,25 +1,36 @@
-name: Empty Repository at UTC+8 0:00
+name: Clear Repository
 
 on:
   schedule:
-    - cron: '0 16 * * *'  # UTC 时间 16:00 对应 UTC+8 时间 0:00
-  workflow_dispatch:
-
+    - cron: '0 16 * * *'  # UTC时间16点对应UTC+8的0点
+  workflow_dispatch: 
+    
 jobs:
-  empty-repo:
+  clear-repo:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write  # 允许推送更改
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v3
-        with:
-          ref: main  # 替换为你的默认分支名
+    - name: Checkout repository
+      uses: actions/checkout@v4
+      with:
+        persist-credentials: true  # 保留凭证以便推送
 
-      - name: Remove all files except .github
-        run: |
-          find . -mindepth 1 -maxdepth 1 ! -name ".github" -exec rm -rf {} +
-          git -C $(pwd) add .
-          git -C $(pwd) commit -m "Empty repository except .github"
+    - name: Delete files and directories
+      run: |
+        # 删除除 .git 和 .github 外的所有内容
+        find . -mindepth 1 -maxdepth 1 -not \( -name ".git" -o -name ".github" \) -exec rm -rf {} +
 
-      - name: Push changes
-        run: |
-          git -C $(pwd) push origin main  # 替换为你的默认分支名    
+    - name: Commit and push changes
+      run: |
+        git config --global user.email "actions@github.com"
+        git config --global user.name "GitHub Actions"
+        git add .
+        
+        # 检查是否有变更需要提交
+        if [ -n "$(git status --porcelain)" ]; then
+          git commit -m "每日清空仓库（UTC+8 零点）"
+          git push
+        else
+          echo "无变更可提交。"
+        fi
