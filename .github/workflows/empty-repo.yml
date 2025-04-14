@@ -24,7 +24,7 @@ jobs:
     - name: Commit and push changes
       run: |
         git config --global user.email "actions@github.com"
-        git config --global user.name "YANGRENRUIYRR"
+        git config --global user.name "Actions User"
         git add .
         
         # 检查是否有变更需要提交
