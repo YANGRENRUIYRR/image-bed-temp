@@ -31,6 +31,7 @@ jobs:
         
         # 检查是否有变更需要提交
         if [ -n "$(git status --porcelain)" ]; then
+          echo "$(date '+%Y-%m-%d %H:%M:%S')">update_time
           git commit -m "每日清空仓库（UTC+8 零点）"
           git push https://${PERSONAL_ACCESS_TOKEN}@github.com/${{ github.repository }}.git
         else
